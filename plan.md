@@ -37,6 +37,26 @@
 - **Validator & QA** → schema checks; cross-rule checks (stage legality, mounting allowances, optional-shaft effects); golden comparisons.
 - **Pack Builder & Versioner** → deterministic outputs; diffs across versions.
 
+### Performance & Reliability
+
+- **Core**: compiled library (Rust or similar), parallelized table parsing, streaming I/O (no giant in-memory PDFs).
+- **Targets**:  
+  - Section indexing < 10s for 400–800 page catalog.  
+  - Table extraction 20–60s (parallelized).  
+  - Mapping/normalize/validate < 10s.  
+  - Full import usually < 2 min; re-imports faster with caching.
+- **Caching**:  
+  - Section Map cache per catalog fingerprint.  
+  - Parser hints from prior fixes auto-applied.  
+  - Asset cache for cropped drawings.
+- **Resilience**:  
+  - Crash-safe checkpoints between stages.  
+  - Resume button for interrupted imports.  
+  - Output uses temp folders with atomic rename on success.  
+- **Storage**:  
+  - Packs written to `/packs/<brand>_<catalog>_<date>/`.  
+  - SQLite holds provenance, coverage, compiled rule graphs.
+
 ### Configurator (Consumer)
 - **Engine**: applies rules to candidate sets; performs **mutual gating** and **nearest-match** within admissible values; runs heavy checks (loads/thermal) off the UI thread.
 - **UI**: facets for family/size/ratio/torque/motor/shaft/mounting; explanations with provenance; spec export.
@@ -45,6 +65,43 @@
 ### Brand Packs (Mapping Layer)
 - `mapping.yaml` (synonyms, field maps, UI labels); `transforms/*`; `rules.yaml`; `curations.yaml`.
 - Human-in-the-loop review UI for low-confidence parses; corrections become durable mapping rules.
+
+### End-to-End User Flow (Standalone App)
+
+1. **Home Screen**
+   - Import Catalog button + drag-and-drop zone.
+   - List of recent imports with status (Complete, In Progress, Needs Review).
+
+2. **Preflight**
+   - Show file metadata (page count, fingerprint hash).
+   - Select Brand Pack (template or existing).
+   - Optional: set catalog name, effective date, output folder.
+   - Validation: confirm file readable, Brand Pack schema valid, space available.
+
+3. **Import & Compile**
+   - Live progress stepper:
+     - Section Indexing
+     - Table Extraction
+     - Rule Scrape
+     - Mapping & Transforms
+     - Curations Overlay
+     - Normalization
+     - Validation
+     - Asset Slicing
+     - Pack Build
+     - Diff Report
+   - Logs visible in a detail pane.
+
+4. **Review (if needed)**
+   - Side-by-side PDF snippet vs. parsed row.
+   - Quick actions: split/merge cell, override unit, add synonym.
+   - Fixes persist into the Brand Pack (mapping, transform, curation).
+
+5. **Done**
+   - Coverage %, diff summary, error count.
+   - Buttons: Open Pack, Open in Configurator, Export Report.
+
+---
 
 ## Data Contracts (v0)
 
@@ -101,6 +158,7 @@
 - Reader outputs deterministic packs with provenance and ≥90% coverage.
 - Configurator performs mutual gating and nearest-match strictly within admissible sets, with clear explanations.
 - Every recommendation includes an explanation citing which constraints matched or were relaxed, with provenance.
+- End-to-end import flow is fully offline, interactive, and resilient (pause/resume, crash-safe).
 - Brand Packs enable onboarding of a new catalog with only mapping/rules/curations—no core changes.
 - Tests (goldens, properties, coverage, crossover) all pass.
 

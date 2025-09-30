@@ -55,10 +55,48 @@ Keep the ontology compact and durable. All brands map into this vocabulary.
 - `curations.yaml`: human-approved overrides for edge cases.
 - All values carry `{file, page, cell/line, confidence}` provenance.
 
-## Cross-Brand “Nearest-Equivalent” Logic
+## Cross-Brand "Nearest-Equivalent" Logic
 - **Hard constraints**: mounting style compatibility; ratio equivalent with acceptable deviation; shaft geometry equality or within acceptable deviations; mounting compatibility; max torque and overhung/axial limits satisfied.
 - **Preferences**: minimal overspec on torque/loads; closest ratio; dimensional proximity; same or higher efficiency class.
 - **Explainability**: for each candidate, list satisfied constraints, relaxations, and provenance.
 
+## Standalone App Workflow (Research Perspective)
+
+As part of the research, we define how a catalog should flow through the Reader/Compiler in a **user-facing desktop app**:
+
+1. **Input**
+   - User drops catalog PDF(s) into the app or selects via file picker.
+   - User chooses a Brand Pack (template or brand-specific).
+   - Optional metadata: catalog name, effective date, output folder.
+
+2. **Preflight**
+   - App fingerprints the file (hash, page count).
+   - Checks Brand Pack validity and storage availability.
+   - Displays info back to the user before starting.
+
+3. **Processing Pipeline**
+   - Section indexing
+   - Table extraction
+   - Rule scraping
+   - Brand mapping and transforms
+   - Curations overlay
+   - Normalization & validation
+   - Asset slicing
+   - Pack build
+   - Diff reporting
+
+4. **Review (if needed)**
+   - Low-confidence or flagged rows shown with PDF snippet side-by-side.
+   - User can correct values; fixes persist into the Brand Pack.
+
+5. **Completion**
+   - App reports coverage, errors (if any), and a diff vs. prior packs.
+   - Buttons: Open Pack, Open in Configurator, Export report.
+
+This workflow ensures the Reader/Compiler is **usable and interactive** while still adhering to the spec-first approach.
+
+---
+
 ## Deliverable (this research.md)
 - Establishes the ontology, fields, ingestion approach, rules to capture, and cross-brand logic—without tying to any specific brand.
+- Document not only the ontology and ingestion rules, but also the **standalone workflow** expected in the Reader/Compiler app.

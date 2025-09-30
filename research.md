@@ -1,87 +1,78 @@
-# DRN Gearmotor Configurator — research.md (Draft)
+# Research — Catalog Reader/Compiler + Configurator (Brand-Agnostic)
 
-> Owner: Jonathan Lee
-> Purpose: Map catalog sections, formulas, and data fields into structured references for downstream schema and rules.
-> Version: 0.1 (skeleton)
+## Purpose
+Define the domain, entities, formulas, and data needed to ingest industrial gearmotor-style catalogs (PDFs or similar) into structured, brand-agnostic **Catalog Packs**, and specify the behavior the **Configurator** needs (mutual gating, nearest match, explainability).
 
----
+## Program Scope & Sequence
+1) Build a **Catalog Reader/Compiler** that ingests catalogs → emits **Catalog Packs** (data + rules + assets + provenance).
+2) Build a **Configurator** that consumes Catalog Packs with **mutual gating** and **nearest-match** behaviors.
+3) Validate MVP with golden samples; then add competitor “Brand Packs” via mappings and curations to enable crossover.
+4) Iterate.
 
-## 1) Catalog Sections Overview
+## Canonical Ontology (v0) — Brand-Agnostic Target Schema
+Keep the ontology compact and durable. All brands map into this vocabulary.
 
-* **Selection basics** (procedure for valid drive system design). *(p.xx–yy)*
-* **Gear unit families** (R, F, K, S, W, incl. RX, R..7). *(p.xx–yy)*
-* **Ratios & stages** (2-stage, 3-stage, compound). *(p.xx–yy)*
-* **Gear unit sizes & torque envelopes**. *(p.xx–yy)*
-* **Motor ratings** (HP, poles, nominal speeds, inverter duty). *(p.xx–yy)*
-* **Mounting positions** (M1–M6, MX, M0, variable, pivoted). *(p.xx–yy)*
-* **Shaft options & dimensions** (solid/hollow, D/D1/D2, L1/L2). *(p.xx–yy)*
-* **Dimension tables** (AC, L, LS, LB, flange diameters). *(p.xx–yy)*
-* **Load limits** (overhung/axial, transmission element factors). *(p.xx–yy)*
-* **Thermal & efficiency notes** (churning losses, run-in efficiency). *(p.xx–yy)*
-* **Auxiliary information** (lubricants, painting/ECO2, NOCO-Paste, environmental). *(p.xx–yy)*
+- **Powertrain**
+  - `family` (enum: helical; parallel-shaft helical; helical-bevel; helical-worm; right-angle/other)
+  - `stage` (1/2/3; `compound_flag`)
+  - `ratio.i` (float), `ratio.series_steps` (list)
+  - `size.code` (string), `size.series` (int)
+  - `torque.nominal`, `torque.max`
 
-## 2) Core Procedures
+- **Motor**
+  - `motor.poles`, `motor.hp`, `motor.kw`, `motor.n_sync`
 
-* **Kinematics → Torque → Gear Unit → Motor → Brake → Inverter**
-  Extract formulas and flow from catalog selection procedure. *(p.xx–yy)*
-* **Controlled drives** (inverter limits, calculation of MMot, Mamax). *(p.xx–yy)*
-* **Compound drives** (very low speed, torque limiting rules). *(p.xx–yy)*
+- **Output End**
+  - `shaft.style` (solid/hollow/spline/block)
+  - `shaft.D`, `shaft.D1/D2`, `shaft.L1/L2`, `shaft.fit`, `shaft.optional_flag`
 
-## 3) Entities & Fields to Capture
+- **Mounting**
+  - `mounting.code` (e.g., M1..M6/MX/M0 or brand codes mapped to these)
+  - `mounting.pivoted_dynamic`, `mounting.pivoted_stationary`
+  - `mounting.breather_oil_notes` (free text)
 
-* **Family**: name, subtype.
-* **Size**: numeric ID, torque envelope, Mamax.
-* **Ratio**: value, stage, admissibility, compound flag.
-* **Motor**: hp, poles, synchronous speed, inverter notes.
-* **Shaft option**: style, D/D1/D2, L1/L2, fit, optional flag.
-* **Mounting**: code, allowance, breather/oil plug info.
-* **Dimensions**: AC, L, LS, LB, flange diameters.
-* **Limits**: overhung, axial, thermal, churning.
-* **Auxiliary info**: lubricants, coatings, NOCO-Paste, temperature ranges.
+- **Loads & Limits**
+  - `overhung.constants` (e.g., a,b,c,f,d,l), `overhung/axial.limits`
+  - `thermal.flags`, `efficiency.eta_tot` (if provided)
 
-## 4) Formulas & Constraints
+- **Metadata**
+  - `brand`, `catalog_version`, `provenance` (page/line/table cell), `admissible`, `deprecation`
 
-* Kinematic equations (speed, distance, acceleration). *(p.xx–yy)*
-* Torque derivations (static, dynamic, MMot). *(p.xx–yy)*
-* Gear unit selection rules (Mamax vs MMot). *(p.xx–yy)*
-* Brake torque ≤ 200% MMot for compound units. *(p.xx–yy)*
-* Overhung/axial load derivations and factors. *(p.xx–yy)*
-* Mounting-dependent lubrication/breather rules. *(p.xx–yy)*
-* Thermal/churning checks. *(p.xx–yy)*
+## Core Procedures & Rules to Capture (Brand-Agnostic)
+- **Selection flow**: kinematics → torques → gear unit selection (by torque & ratio constraints) → motor selection (max/effective point) → brake selection → inverter selection.
+- **Compound/very-low-speed** patterns: limit motor based on permitted output torque; compute allowable motor torque from total ratio and efficiency; brake torque caps relative to motor torque (if specified by a brand).
+- **Mounting behavior**: allowed mounting codes; required adjustments (oil fill, breather position); special “pivoted/universal” modes if present.
+- **Loads**: overhung and axial load determination; transmission element factors where available; constants tables and formulas.
+- **Thermal & efficiency**: thermal checks and churning/immersion guidance where applicable.
 
-## 5) Page/Line Anchors
+## Data Field Inventory (maps to ontology)
+- `family`, `stage`, `ratio.i`, `size.code`, `torque.nominal`, `torque.max`
+- `motor.poles`, `motor.hp`, `motor.kw`, `motor.n_sync`
+- `shaft.style`, `shaft.D`, `shaft.D1/D2`, `shaft.L1/L2`, `shaft.fit`, `shaft.optional_flag`
+- `mounting.code`, `mounting.pivoted_dynamic`, `mounting.pivoted_stationary`, `mounting.breather_oil_notes`
+- `overhung.constants`, `overhung/axial.limits`, `thermal.flags`, `efficiency.eta_tot`
+- `brand`, `catalog_version`, `provenance`, `admissible`, `deprecation`
 
-Each field and formula above will be referenced with:
+## Brand-Agnostic Ingestion Strategy
+- The Reader/Compiler never hard-codes brand nouns.
+- Introduce **Brand Packs** (mapping + transforms + rules + curations) to map source catalogs into the canonical ontology.
 
-* **Catalog page #**
-* **Line or table number**
-* **Source context** (selection table, dimension sheet, rule paragraph)
+**Brand Pack structure (concept)**
+- `mapping.yaml`: term/code → canonical field mapping; synonyms for enums (e.g., mounting codes); UI labels.
+- `transforms/*`: small transformations (e.g., split “25/30” into `[25,30]`, normalize units).
+- `rules.yaml`: brand-specific constraints expressed in a common rules DSL.
+- `curations.yaml`: human-approved overrides for edge cases.
+- All values carry `{file, page, cell/line, confidence}` provenance.
 
-*(Placeholder until we annotate directly from DRN catalog PDF)*
+## Cross-Brand “Nearest-Equivalent” Logic
+- **Hard constraints**: family compatibility; ratio within available steps; shaft geometry equality/tolerance; mounting compatibility; max torque and overhung/axial limits satisfied.
+- **Preferences**: minimal overspec on torque/loads; closest ratio; dimensional proximity; same or higher efficiency class.
+- **Explainability**: for each candidate, list satisfied constraints, relaxations, and provenance.
 
-## 6) Glossary (Catalog Terms)
+## Open Questions
+- Which dimension fields beyond `shaft.D/L1/L2` should be first-class facets?
+- Acceptable tolerance bands for nearest-match (ratio, D, L1/L2) per family/size.
+- How to represent thermal conditions (boolean flags vs. condition descriptors)?
 
-* **Mamax**: maximum permissible output torque of gear unit.
-* **MMot**: motor torque.
-* **L1/L2**: shaft lengths (catalog-specific).
-* **AC, LS, LB**: dimension codes from catalog tables.
-* **M1–M6, MX, M0**: mounting positions.
-* **Optional shaft**: shaft option not standard, with possible derating.
-* **Transmission element factors**: multipliers for belts, chains, gears.
-
-## 7) Open Questions
-
-* Are all dimension codes (AC, LS, LB, etc.) needed as top-level fields or only shaft-related ones?
-* For inverter duty: do we encode curves or tabular derating factors?
-* How granular do we need auxiliary info (e.g., lubricants by size vs by family)?
-
----
-
-## Deliverable
-
-A complete `research.md` will:
-
-* Contain all catalog-derived data fields with exact page/line references.
-* Include extracted formulas and constraints with context.
-* Provide glossary + clarifications for ambiguous terms.
-* Serve as the reference input for `plan.md` (schema & rules design).
+## Deliverable (this research.md)
+- Establishes the ontology, fields, ingestion approach, rules to capture, and cross-brand logic—without tying to any specific brand.

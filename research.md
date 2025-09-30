@@ -20,37 +20,28 @@ Keep the ontology compact and durable. All brands map into this vocabulary.
   - `torque.nominal`, `torque.max`
 
 - **Motor**
-  - `motor.poles`, `motor.hp`, `motor.kw`, `motor.n_sync`
+  - `motor.poles`, `motor.hp`, `motor.kw`
 
 - **Output End**
-  - `shaft.style` (solid/hollow/spline/block)
-  - `shaft.D`, `shaft.D1/D2`, `shaft.L1/L2`, `shaft.fit`, `shaft.optional_flag`
+  - `shaft.style` (solid/hollow/shrink_disc)
+  - `shaft.dim`, `shaft.D1/D2`, `shaft.L1/L2`
 
 - **Mounting**
   - `mounting.code` (e.g., M1..M6/MX/M0 or brand codes mapped to these)
-  - `mounting.pivoted_dynamic`, `mounting.pivoted_stationary`
-  - `mounting.breather_oil_notes` (free text)
-
-- **Loads & Limits**
-  - `overhung.constants` (e.g., a,b,c,f,d,l), `overhung/axial.limits`
-  - `thermal.flags`, `efficiency.eta_tot` (if provided)
+  - `mounting.style` (e.g., Flanged, Footed, Torque Arm or brand codes mapped to these)
 
 - **Metadata**
   - `brand`, `catalog_version`, `provenance` (page/line/table cell), `admissible`, `deprecation`
 
 ## Core Procedures & Rules to Capture (Brand-Agnostic)
-- **Selection flow**: kinematics → torques → gear unit selection (by torque & ratio constraints) → motor selection (max/effective point) → brake selection → inverter selection.
-- **Compound/very-low-speed** patterns: limit motor based on permitted output torque; compute allowable motor torque from total ratio and efficiency; brake torque caps relative to motor torque (if specified by a brand).
-- **Mounting behavior**: allowed mounting codes; required adjustments (oil fill, breather position); special “pivoted/universal” modes if present.
-- **Loads**: overhung and axial load determination; transmission element factors where available; constants tables and formulas.
-- **Thermal & efficiency**: thermal checks and churning/immersion guidance where applicable.
+- **Selection flow gearbox**: Output end → ratio → mounting style 
+- **Selection flow motor**: motor hp/kw → motor poles
 
 ## Data Field Inventory (maps to ontology)
 - `family`, `stage`, `ratio.i`, `size.code`, `torque.nominal`, `torque.max`
-- `motor.poles`, `motor.hp`, `motor.kw`, `motor.n_sync`
-- `shaft.style`, `shaft.D`, `shaft.D1/D2`, `shaft.L1/L2`, `shaft.fit`, `shaft.optional_flag`
-- `mounting.code`, `mounting.pivoted_dynamic`, `mounting.pivoted_stationary`, `mounting.breather_oil_notes`
-- `overhung.constants`, `overhung/axial.limits`, `thermal.flags`, `efficiency.eta_tot`
+- `motor.poles`, `motor.hp`, `motor.kw`
+- `shaft.style`, `shaft.dim`
+- `mounting.code`, `mounting.style` 
 - `brand`, `catalog_version`, `provenance`, `admissible`, `deprecation`
 
 ## Brand-Agnostic Ingestion Strategy
@@ -65,14 +56,9 @@ Keep the ontology compact and durable. All brands map into this vocabulary.
 - All values carry `{file, page, cell/line, confidence}` provenance.
 
 ## Cross-Brand “Nearest-Equivalent” Logic
-- **Hard constraints**: family compatibility; ratio within available steps; shaft geometry equality/tolerance; mounting compatibility; max torque and overhung/axial limits satisfied.
+- **Hard constraints**: mounting style compatibility; ratio equivalent with acceptable deviation; shaft geometry equality or within acceptable deviations; mounting compatibility; max torque and overhung/axial limits satisfied.
 - **Preferences**: minimal overspec on torque/loads; closest ratio; dimensional proximity; same or higher efficiency class.
 - **Explainability**: for each candidate, list satisfied constraints, relaxations, and provenance.
-
-## Open Questions
-- Which dimension fields beyond `shaft.D/L1/L2` should be first-class facets?
-- Acceptable tolerance bands for nearest-match (ratio, D, L1/L2) per family/size.
-- How to represent thermal conditions (boolean flags vs. condition descriptors)?
 
 ## Deliverable (this research.md)
 - Establishes the ontology, fields, ingestion approach, rules to capture, and cross-brand logic—without tying to any specific brand.

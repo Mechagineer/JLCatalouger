@@ -37,6 +37,56 @@
 - **Validator & QA** → schema checks; cross-rule checks (stage legality, mounting allowances, optional-shaft effects); golden comparisons.
 - **Pack Builder & Versioner** → deterministic outputs; diffs across versions.
 
+#### Ingestion & Extraction (Deterministic, Offline)
+
+**1) PDF ingestion (deterministic first)**
+- Use an embedded PDF engine (e.g., pdfium/poppler via bindings) to read the native text layer and vector graphics.
+- Extract positioned glyphs → words → lines → paragraphs (x/y, font size/style), plus vector lines/boxes and images.
+- No network calls; all processing runs locally.
+
+**2) Table detection & extraction**
+- Detect tables using structure:
+  - Ruled tables: vector stroke grid topology.
+  - Borderless tables: whitespace/column alignment clustering.
+- Resolve merged cells and multi-page continuations; capture header units.
+- Emit **Raw Extracts** with per-cell provenance `{page, table_id, row, col}` and a confidence score.
+
+**3) Narrative rule scraping**
+- Scan paragraphs for rule-like language (must/shall/limited) and inline formulas.
+- Capture selection-flow steps, compound/torque relations, mounting behaviors, load/thermal guidance as **rule snippets** with anchors.
+
+**4) OCR fallback (only when needed)**
+- If a page lacks a text layer (scanned), render at high DPI and run on-device OCR (e.g., Tesseract).
+- For scanned tables, apply simple vision ops (binarize → line detect → cell segmentation).
+- Mark OCR-derived cells with lower confidence so they route to Review if necessary.
+
+**5) Brand mapping & transforms (semantic understanding)**
+- Apply **Brand Pack** mapping:
+  - `mapping.yaml`: header/term → canonical field path.
+  - `synonyms`: normalize enums/codes.
+  - `transforms/*`: split composite values (e.g., “25/30”), normalize units/decimals.
+  - `curations.yaml`: hand-approved overrides for edge cases.
+- All transformations are data-driven and auditable.
+
+**6) Normalization, typing, and validation**
+- Enforce ontology types/units (mm, Nm, rpm, °C) and enum domains.
+- Build composite keys as needed (e.g., `family|size`).
+- Cross-check constraints (stage legality, mounting allowances, optional-shaft impacts, etc.).
+
+**7) Optional small ML assist (offline, plug-in)**
+- For difficult borderless tables, an on-device layout model may propose cell boxes.
+- This step is optional; it only aids geometry. Mapping/rules still govern semantics.
+
+**8) Provenance and coverage**
+- Record a provenance entry for every output field to `provenance.jsonl` including original text, source anchors, and confidence.
+- Compute and write a parse **coverage** report (`coverage.json`) for acceptance checks.
+
+**9) Assets & pack build**
+- Crop vector drawings (dimension/mounting sheets) to SVG/PNG where available.
+- Produce deterministic outputs: sorted CSVs, canonical float formatting, `rules/*.yaml`, `pack.yaml`, `provenance.jsonl`, `coverage.json`.
+
+> Result: a reproducible, explainable, fully offline pipeline that converts PDFs into versioned, brand-agnostic **Catalog Packs** ready for the Configurator.
+
 ### Performance & Reliability
 
 - **Core**: compiled library (Rust or similar), parallelized table parsing, streaming I/O (no giant in-memory PDFs).

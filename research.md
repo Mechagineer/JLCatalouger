@@ -55,6 +55,42 @@ Keep the ontology compact and durable. All brands map into this vocabulary.
 - `curations.yaml`: human-approved overrides for edge cases.
 - All values carry `{file, page, cell/line, confidence}` provenance.
 
+## PDF Ingestion & Extraction (Research Overview)
+
+The Reader/Compiler must be able to ingest catalogs delivered as PDFs in a repeatable and offline-safe way:
+
+1. **Deterministic parsing first**
+   - Use embedded PDF libraries to extract native text, vector lines, and images.
+   - Reconstruct words, paragraphs, and headings based on positioning and font data.
+
+2. **Table detection**
+   - Identify ruled tables via vector line grids.
+   - Identify borderless tables via whitespace and alignment clustering.
+   - Resolve merged cells and multi-page continuation.
+
+3. **Narrative rule scraping**
+   - Identify paragraphs with selection rules or formulas (must/shall/limited).
+   - Extract these into normalized rule snippets with provenance anchors.
+
+4. **OCR fallback (only when needed)**
+   - If a page has no text layer, render at high DPI and run local OCR.
+   - Use simple vision ops for cell segmentation on scanned tables.
+   - Flag OCR-derived data with lower confidence.
+
+5. **Brand mapping & transforms**
+   - Apply mapping.yaml (field headers → canonical), synonyms, transforms, and curations.
+   - All transformations are data-driven and auditable.
+
+6. **Optional local ML assist**
+   - For very messy borderless tables, a small on-device model can suggest cell boxes.
+   - Used only for geometry detection; semantics still come from mappings and rules.
+
+7. **Provenance & coverage**
+   - Every extracted field is logged with `{file, page, section, cell/line, original_text, confidence}`.
+   - Coverage reports summarize what proportion of expected fields were successfully parsed.
+
+This ensures catalogs can be ingested deterministically, with explainable outputs, and without reliance on remote services.
+
 ## Cross-Brand "Nearest-Equivalent" Logic
 - **Hard constraints**: mounting style compatibility; ratio equivalent with acceptable deviation; shaft geometry equality or within acceptable deviations; mounting compatibility; max torque and overhung/axial limits satisfied.
 - **Preferences**: minimal overspec on torque/loads; closest ratio; dimensional proximity; same or higher efficiency class.
@@ -100,3 +136,4 @@ This workflow ensures the Reader/Compiler is **usable and interactive** while st
 ## Deliverable (this research.md)
 - Establishes the ontology, fields, ingestion approach, rules to capture, and cross-brand logic—without tying to any specific brand.
 - Document not only the ontology and ingestion rules, but also the **standalone workflow** expected in the Reader/Compiler app.
+ - Document the **PDF ingestion strategy** (deterministic parsing, OCR fallback, optional local ML assist) as part of the research baseline.

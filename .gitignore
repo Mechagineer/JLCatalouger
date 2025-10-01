@@ -1,0 +1,5 @@
+/packs/*
+/models/*
+/src-tauri/bin/*
+/qa/output/*
+

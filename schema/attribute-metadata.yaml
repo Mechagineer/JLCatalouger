@@ -1,0 +1,13 @@
+# Attribute metadata schema (draft)
+attributes:
+  - name: flange.d
+    facet: true
+    control_mode: lookup
+    lookup: "flange_table(family,size)"
+    invertible: true
+    nearest_match: true
+  - name: shaft.D
+    facet: true
+    control_mode: numeric_discrete
+    nearest_match: true
+

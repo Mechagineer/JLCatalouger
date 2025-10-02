@@ -8,7 +8,7 @@ This file captures rules for contributors and for Cursor to follow. It prevents 
 - Run `pnpm approve-builds` once after cloning to allow esbuild and related scripts.
 
 ## 2) Tauri ⇄ Vite wiring
-- **Vite dev port** is **1420**. Do not change without also updating `src-tauri/tauri.conf.json: tauri.devPath`.
+- **Vite dev port** is **1420**. Do not change without also updating `src-tauri/tauri.conf.json: build.devPath`.
 - Tauri launches Vite via `beforeDevCommand: "pnpm run dev"`; Vite must bind to port **1420** (see `vite.config.ts`).
 - If dev window "waits for frontend dev server", start `pnpm run dev` in another terminal; confirm it prints `http://localhost:1420`.
 
@@ -34,7 +34,7 @@ This file captures rules for contributors and for Cursor to follow. It prevents 
   1. `pnpm install`
   2. `pnpm approve-builds` (approve **esbuild** + **@esbuild/win32-x64**)
   3. `pnpm tauri dev` (or run `pnpm run dev` in one terminal and `pnpm tauri dev` in another)
-- If a port conflict occurs: pick a new port; update **both** `vite.config.ts` (server.port) **and** `tauri.conf.json` (tauri.devPath) in one commit.
+- If a port conflict occurs: pick a new port; update **both** `vite.config.ts` (server.port) **and** `tauri.conf.json` (build.devPath) in one commit.
 
 ## 7) Cursor-specific instructions
 - Do not rename or relocate `src-tauri/`, `brand_packs/`, `schema/`, `qa/`, or `tests/`.
@@ -46,3 +46,27 @@ This file captures rules for contributors and for Cursor to follow. It prevents 
 - **Tauri waits for dev server**: make sure Vite binds to `http://localhost:1420`.
 - **DLL missing at runtime**: ensure DLLs live in `src-tauri/bin/` and are listed in `bundle.resources`.
 - **Permission denied writing packs**: use a user folder (e.g., `Documents`).
+
+## Tauri config schema guardrails (v1)
+- We are on **Tauri v1.x** (see package.json and Cargo.toml). Use the **v1 schema**.
+- **Do NOT** place `devPath` or `distDir` under `"tauri"`.  
+  They must be under the top-level `"build"` object:
+  - `"build.devPath": "http://localhost:1420"`
+  - `"build.distDir": "../dist"`
+- Keep these in sync with Vite:
+  - Vite dev port is **1420** in `vite.config.ts` (`server.port = 1420`, `strictPort = true`).
+  - `tauri.conf.json -> build.devPath` must point to the same port.
+
+### Quick self-check (run after editing config)
+1) `pnpm approve-builds` (approve **esbuild** + **@esbuild/win32-x64** if prompted).
+2) `pnpm install`
+3) `pnpm tauri dev`
+   - If you see **"Additional properties are not allowed ('devPath', 'distDir')"**: you put these under the wrong key. Move them to `"build"`.
+   - If you see **"Waiting for your frontend dev server"**: verify Vite is on port **1420** and matches `build.devPath`.
+
+### Don't change without updating both places
+- If you need a different port, update **both**:
+  - `vite.config.ts` → `server.port`
+  - `src-tauri/tauri.conf.json` → `build.devPath`
+- Make the change in a single commit titled:  
+  `"Dev port change: Vite + Tauri devPath sync"`

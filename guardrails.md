@@ -90,3 +90,27 @@ If you later build on a different network (without filtering), you may remove th
 3. If still blocked:
    - Check corporate proxy settings (`HTTPS_PROXY`, `HTTP_PROXY`) if required in your environment.
    - Try again from a non-filtered network or VPN.
+
+## Cargo downloads on corporate networks
+If you see partial downloads or TLS errors (e.g., `Transferred a partial file`, `CRYPT_E_NO_REVOCATION_CHECK`):
+- We harden Cargo via `.cargo/config.toml`:
+  - `[http] check-revoke=false`, `multiplexing=false`
+  - `[net] retry=5`, `git-fetch-with-cli=true`
+- Re-run the build: `pnpm tauri dev` (or `cargo build`).
+
+### Make builds fully offline (recommended)
+Run vendoring **once on a good connection**:
+1. Install `cargo-vendor` (temporarily online): `cargo install cargo-vendor`
+2. From repo root: `cargo vendor --versioned-dirs --respect-source-config --locked vendor`
+   - This creates a `vendor/` folder with all crates and an `index/` for sparse registry
+3. Edit `.cargo/config.toml`:
+   - Set `[source.crates-io].replace-with = "vendored-sparse"`
+   - Uncomment the `[source.vendored-sparse]` block pointing to `sparse+file://vendor/index`
+4. Commit `vendor/` (or keep internal-only if repo size is a concern)
+
+After vendoring, builds do not need the internet.
+
+### Quick checklist
+- If downloads fail: try again (we set `retry=5`)
+- Still failing: run from a non-filtered network once, **vendor**, then you're offline forever
+- Keep `vendor/` updated when you update dependencies (rerun `cargo vendor`)

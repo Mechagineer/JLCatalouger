@@ -1,8 +1,17 @@
-# Workaround for corporate/network TLS revocation issues on Windows schannel.
-# Scoped to this repository only.
+# ---- Cargo network hardening (scoped to this repo) ----
 [http]
-check-revoke = false
+check-revoke = false            # already needed on some Windows networks
+multiplexing = false            # avoid HTTP/2 multiplexing on flaky proxies
 
-# Optional: use git.exe for fetching to avoid libgit2 TLS edge cases.
 [net]
-git-fetch-with-cli = true
+retry = 5                       # re-try failed downloads
+git-fetch-with-cli = true       # let git.exe handle TLS/proxy rules
+
+[source.crates-io]
+replace-with = "crates-io"
+
+# When vendored/, we will switch replace-with to 'vendored-sparse'.
+
+# ---- Vendoring (optional, after running scripts/vendor-crates.ps1) ----
+# [source.vendored-sparse]
+# registry = "sparse+file://vendor/index"

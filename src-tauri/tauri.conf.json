@@ -1,7 +1,7 @@
 {
   "build": {
-    "beforeBuildCommand": "",
-    "beforeDevCommand": ""
+    "beforeBuildCommand": "pnpm run build",
+    "beforeDevCommand": "pnpm run dev"
   },
   "package": {
     "productName": "JLCatalouger",
@@ -30,6 +30,8 @@
       "resources": [
         "src-tauri/bin/*"
       ]
-    }
+    },
+    "devPath": "http://localhost:1420",
+    "distDir": "../dist"
   }
 }

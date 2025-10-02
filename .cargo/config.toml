@@ -1,0 +1,8 @@
+# Workaround for corporate/network TLS revocation issues on Windows schannel.
+# Scoped to this repository only.
+[http]
+check-revoke = false
+
+# Optional: use git.exe for fetching to avoid libgit2 TLS edge cases.
+[net]
+git-fetch-with-cli = true

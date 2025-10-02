@@ -70,3 +70,23 @@ This file captures rules for contributors and for Cursor to follow. It prevents 
   - `src-tauri/tauri.conf.json` → `build.devPath`
 - Make the change in a single commit titled:  
   `"Dev port change: Vite + Tauri devPath sync"`
+
+## Cargo TLS (Windows schannel) guardrail
+If `pnpm tauri dev` (or any `cargo` build) fails with:
+- `CRYPT_E_NO_REVOCATION_CHECK` or
+- `The revocation function was unable to check revocation for the certificate`
+
+it is a known Windows schannel issue on some networks. We pin a repo-local fix:
+- `.cargo/config.toml` contains:
+  - `[http] check-revoke = false`
+  - `[net] git-fetch-with-cli = true`
+
+This disables only the revocation **check** for Cargo **inside this repo** and lets builds proceed offline-first.  
+If you later build on a different network (without filtering), you may remove the workaround.
+
+### Steps after seeing the error
+1. Confirm `.cargo/config.toml` exists as above.
+2. Re-run: `pnpm tauri dev` (or `cargo build -p jlcataloguer`).
+3. If still blocked:
+   - Check corporate proxy settings (`HTTPS_PROXY`, `HTTP_PROXY`) if required in your environment.
+   - Try again from a non-filtered network or VPN.

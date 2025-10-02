@@ -3,3 +3,11 @@
 /src-tauri/bin/*
 /qa/output/*
 
+# Node / Vite / Tauri
+node_modules/
+dist/
+.vite/
+src-tauri/target/
+src-tauri/.fingerprint/
+src-tauri/bin/*.dll
+.DS_Store

@@ -1,17 +1,15 @@
-# ---- Cargo network hardening (scoped to this repo) ----
+# Cargo network hardening (repo-scoped)
 [http]
-check-revoke = false            # already needed on some Windows networks
-multiplexing = false            # avoid HTTP/2 multiplexing on flaky proxies
+check-revoke = false
+multiplexing = false
 
 [net]
-retry = 5                       # re-try failed downloads
-git-fetch-with-cli = true       # let git.exe handle TLS/proxy rules
+retry = 5
+git-fetch-with-cli = true
 
-[source.crates-io]
-replace-with = "crates-io"
-
-# When vendored/, we will switch replace-with to 'vendored-sparse'.
-
-# ---- Vendoring (optional, after running scripts/vendor-crates.ps1) ----
+# Vendoring switch (enable only after `cargo vendor` creates ./vendor/index)
+# [source.crates-io]
+# replace-with = "vendored-sparse"
+#
 # [source.vendored-sparse]
 # registry = "sparse+file://vendor/index"

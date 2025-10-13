@@ -1,11 +1,11 @@
-# Runs vendoring to make builds offline.
-# Use on a good connection; afterwards the repo builds without network.
-# Steps:
-# 1) cargo install cargo-vendor
-# 2) cargo vendor --versioned-dirs --respect-source-config --locked vendor
-# 3) Edit .cargo/config.toml: set replace-with = "vendored-sparse" and uncomment the vendored-sparse block.
-
-Write-Output "Vendoring crates to ./vendor ..."
+# Vendoring crates to ./vendor so builds work offline.
+# Run from repo root on a good connection.
 $ErrorActionPreference = "Stop"
-cargo vendor --versioned-dirs --respect-source-config --locked vendor
-Write-Output "Done. Now edit .cargo/config.toml to replace-with = 'vendored-sparse' and commit vendor/."
+Write-Host "Vendoring crates to ./vendor ..."
+cargo vendor --versioned-dirs --respect-source-config vendor
+Write-Host "Enable vendored (directory) source by appending to .cargo/config.toml:"
+Write-Host "[source.crates-io]"
+Write-Host "replace-with = 'vendored-sources'"
+Write-Host ""
+Write-Host "[source.vendored-sources]"
+Write-Host "directory = 'vendor'"

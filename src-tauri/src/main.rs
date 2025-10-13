@@ -7,6 +7,9 @@ use std::io::Write;
 use chrono::Local;
 use anyhow::{Result, Context};
 
+mod reader;
+mod pack;
+
 #[tauri::command]
 fn build_smoke_pack(input_pdf: String, packs_root: Option<String>) -> Result<String, String> {
   // Resolve output root

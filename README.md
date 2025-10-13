@@ -113,3 +113,8 @@ See **plan.md → Work Plan** and **Acceptance Criteria**.
 ## License
 
 TBD.
+
+## Dev run & smoke test
+- First time (recommended): `scripts/vendor-crates.ps1` → enable vendored mode in `.cargo/config.toml` (see guardrails).
+- Dev: `pnpm install && pnpm approve-builds && pnpm tauri dev`
+- In the app, click **Build Smoke Pack** and select any PDF. A Pack appears under `./packs/Smoke_<timestamp>/` with headers-only CSVs.

@@ -34,3 +34,14 @@ If Tauri shows “waiting for frontend dev server”, start `pnpm run dev` separ
 1. `pnpm install`
 2. `pnpm approve-builds` (approve esbuild + @esbuild/win32-x64)
 3. `pnpm tauri dev`
+
+## Offline vendoring (directory source)
+- Run `scripts/vendor-crates.ps1` once on a good connection to create `./vendor`.
+- Then enable in `.cargo/config.toml`:
+  [source.crates-io]
+  replace-with = "vendored-sources"
+
+  [source.vendored-sources]
+  directory = "vendor"
+
+- Verify offline: `cargo build --manifest-path src-tauri/Cargo.toml --offline`

@@ -8,8 +8,9 @@ retry = 5
 git-fetch-with-cli = true
 
 # Vendoring switch (enable only after `cargo vendor` creates ./vendor/index)
+# Enable ONLY AFTER ./vendor exists (see scripts/vendor-crates.ps1):
 # [source.crates-io]
-# replace-with = "vendored-sparse"
+# replace-with = "vendored-sources"
 #
-# [source.vendored-sparse]
-# registry = "sparse+file://vendor/index"
+# [source.vendored-sources]
+# directory = "vendor"
